@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "5279f427-1561-4ac4-9b61-556abe64a5e9",
+      "content": "Title: test.txt\n\nThis is a test insurance contract. Policy Number: ABC123.",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test.txt",
+          "url": "test.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test.txt",
+      "token_count": 11
+    }
+  ]
+}

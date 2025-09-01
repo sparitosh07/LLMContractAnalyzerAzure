@@ -1,0 +1,11 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-parallel-123
+Filename: test.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Policy Number: ABC123

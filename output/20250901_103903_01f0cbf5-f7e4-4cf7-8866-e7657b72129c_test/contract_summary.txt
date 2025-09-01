@@ -1,0 +1,11 @@
+Contract Extraction Summary
+=============================
+
+Document ID: 01f0cbf5-f7e4-4cf7-8866-e7657b72129c
+Filename: test.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Policy Number: XYZ789

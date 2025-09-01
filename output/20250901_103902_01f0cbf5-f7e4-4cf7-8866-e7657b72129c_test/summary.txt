@@ -1,0 +1,24 @@
+Document Processing Summary
+===========================
+
+Document ID: 01f0cbf5-f7e4-4cf7-8866-e7657b72129c
+Filename: test.txt
+Processed: 2025-09-01 10:39:02
+
+Results:
+- Chunks generated: 1
+- Embeddings created: 1
+- Files saved: 5
+
+Timing Performance:
+- Total processing time: 0.00s
+- PDF processing: 0.00s
+- Parallel processing: 0.00s
+- Search index update: 0.00s
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_103902_01f0cbf5-f7e4-4cf7-8866-e7657b72129c_test/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_103902_01f0cbf5-f7e4-4cf7-8866-e7657b72129c_test/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_103902_01f0cbf5-f7e4-4cf7-8866-e7657b72129c_test/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_103902_01f0cbf5-f7e4-4cf7-8866-e7657b72129c_test/metadata.json
+- timing: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_103902_01f0cbf5-f7e4-4cf7-8866-e7657b72129c_test/timing_stats.json

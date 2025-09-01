@@ -1,0 +1,28 @@
+{
+  "document_info": {
+    "document_id": "01f0cbf5-f7e4-4cf7-8866-e7657b72129c",
+    "filename": "test.txt",
+    "processed_at": "2025-09-01T10:39:02.074328"
+  },
+  "processing_stats": {
+    "total_chunks": 1,
+    "total_tokens": 14,
+    "avg_tokens_per_chunk": 14.0,
+    "source_file": "test.txt",
+    "file_extension": ".txt",
+    "chunk_size": 1000,
+    "chunk_overlap": 200
+  },
+  "timing_stats": {
+    "start_time": 1756719541.493123,
+    "embedding_generation_time": 0.45029187202453613,
+    "search_index_creation_time": 0.0865478515625
+  },
+  "metadata": {
+    "content_type": "text/plain"
+  },
+  "config_used": {
+    "local_storage_enabled": true,
+    "base_path": "/Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "unique_market_reference": {
+    "policy_number": "XYZ789",
+    "quote_number": null,
+    "broker_reference": null,
+    "insurer_reference": null,
+    "umr_code": null,
+    "certificate_number": null,
+    "endorsement_numbers": []
+  },
+  "limits": [],
+  "premiums": [],
+  "coverages": [],
+  "exclusions": [],
+  "extraction_metadata": {}
+}

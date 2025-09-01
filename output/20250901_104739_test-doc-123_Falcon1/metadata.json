@@ -1,0 +1,28 @@
+{
+  "document_info": {
+    "document_id": "test-doc-123",
+    "filename": "Falcon1.pdf",
+    "processed_at": "2025-09-01T10:47:39.319383"
+  },
+  "processing_stats": {
+    "total_chunks": 32,
+    "total_tokens": 31605,
+    "avg_tokens_per_chunk": 987.65625,
+    "source_file": "Falcon1.pdf",
+    "file_extension": ".pdf",
+    "chunk_size": 1000,
+    "chunk_overlap": 200
+  },
+  "timing_stats": {
+    "start_time": 1756720055.264632,
+    "embedding_generation_time": 3.812849760055542,
+    "search_index_creation_time": 0.10436081886291504
+  },
+  "metadata": {
+    "content_type": "text/plain"
+  },
+  "config_used": {
+    "local_storage_enabled": true,
+    "base_path": "/Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output"
+  }
+}
