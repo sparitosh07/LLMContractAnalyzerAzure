@@ -1,0 +1,29 @@
+{
+  "document_info": {
+    "document_id": "test-doc-123",
+    "filename": "Falcon1.pdf",
+    "processed_at": "2025-08-31T18:23:42.323654"
+  },
+  "processing_stats": {
+    "total_chunks": 32,
+    "total_tokens": 31605,
+    "avg_tokens_per_chunk": 987.65625,
+    "source_file": "Falcon1.pdf",
+    "file_extension": ".pdf",
+    "chunk_size": 1000,
+    "chunk_overlap": 200
+  },
+  "metadata": {
+    "content_type": "application/pdf",
+    "filename": "Falcon1.pdf",
+    "file_extension": ".pdf",
+    "total_pages": 60,
+    "model_used": "prebuilt-layout",
+    "api_version": "2023-07-31",
+    "extraction_method": "azure_document_intelligence"
+  },
+  "config_used": {
+    "local_storage_enabled": true,
+    "base_path": "/Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output"
+  }
+}

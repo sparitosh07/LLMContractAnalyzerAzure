@@ -1,0 +1,7 @@
+{
+  "chunks_processed": 1,
+  "successful_chunks": 0,
+  "extraction_method": "langgraph_map_reduce",
+  "model_used": "gpt-4o",
+  "validation_success": true
+}

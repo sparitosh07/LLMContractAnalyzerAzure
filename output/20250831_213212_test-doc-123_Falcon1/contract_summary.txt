@@ -1,0 +1,8 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-doc-123
+Filename: Falcon1.pdf
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:

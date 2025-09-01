@@ -1,0 +1,16 @@
+{
+  "chunks_processed": 3,
+  "successful_chunks": 3,
+  "extraction_method": "langgraph_map_reduce",
+  "model_used": null,
+  "langsmith_session": "contract_extraction_test-doc-123",
+  "validation_success": true,
+  "timing_stats": {
+    "splitting_time": 0.00014591217041015625,
+    "map_extraction_time": 29.604817867279053,
+    "total_chunk_processing_time": 29.600061178207397,
+    "reduce_combine_time": 0.0003859996795654297,
+    "validation_time": 0.0007610321044921875,
+    "total_processing_time": 29.612425088882446
+  }
+}

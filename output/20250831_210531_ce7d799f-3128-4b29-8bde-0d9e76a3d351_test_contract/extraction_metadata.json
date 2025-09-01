@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error": "name 'session_id' is not defined",
+  "extraction_method": "langgraph_map_reduce"
+}

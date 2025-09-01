@@ -1,0 +1,30 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-doc-123
+Filename: Falcon1.pdf
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Umr Code: 14IL\H00H1002
+
+Limits (3 found):
+- Reinsurer's per occurrence limit for the First Excess layer: $10,000,000
+- Reinsurer's per occurrence limit for the Second Excess layer: $20,000,000
+- Reinsurer's per occurrence limit for the Third Excess layer: $70,000,000
+
+Premiums (9 found):
+- annual_minimum_premium: None
+- annual_deposit_premium: None
+- quarterly_deposit_premium: None
+- annual_premium: $1,600,000
+- annual_premium: $2,240,000
+
+Exclusions (17 found):
+- Financial Guarantee and Insolvency: financial_exclusion
+- Nuclear Risks: nuclear_exclusion
+- War and Hostilities: war_exclusion
+- Pools, Associations and Syndicates: pool_exclusion
+- Insolvency Fund Liability: insolvency_exclusion

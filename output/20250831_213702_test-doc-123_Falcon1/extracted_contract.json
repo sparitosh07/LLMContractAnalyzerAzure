@@ -1,0 +1,348 @@
+{
+  "unique_market_reference": {
+    "policy_number": null,
+    "quote_number": null,
+    "broker_reference": null,
+    "insurer_reference": null,
+    "umr_code": "14IL\\H00H1002",
+    "certificate_number": null,
+    "endorsement_numbers": []
+  },
+  "limits": [
+    {
+      "limit_type": "per_occurrence",
+      "amount": {
+        "value": 10000000.0,
+        "currency": "USD",
+        "formatted_text": "$10,000,000"
+      },
+      "description": "Reinsurer's per occurrence limit for the First Excess layer",
+      "coverage_reference": "First Property Catastrophe Excess of Loss Reinsurance",
+      "deductible": {
+        "value": 10000000.0,
+        "currency": "USD",
+        "formatted_text": "$10,000,000"
+      },
+      "waiting_period": null
+    },
+    {
+      "limit_type": "per_occurrence",
+      "amount": {
+        "value": 20000000.0,
+        "currency": "USD",
+        "formatted_text": "$20,000,000"
+      },
+      "description": "Reinsurer's per occurrence limit for the Second Excess layer",
+      "coverage_reference": "Second Property Catastrophe Excess of Loss Reinsurance",
+      "deductible": {
+        "value": 20000000.0,
+        "currency": "USD",
+        "formatted_text": "$20,000,000"
+      },
+      "waiting_period": null
+    },
+    {
+      "limit_type": "per_occurrence",
+      "amount": {
+        "value": 70000000.0,
+        "currency": "USD",
+        "formatted_text": "$70,000,000"
+      },
+      "description": "Reinsurer's per occurrence limit for the Third Excess layer",
+      "coverage_reference": "Third Property Catastrophe Excess of Loss Reinsurance",
+      "deductible": {
+        "value": 40000000.0,
+        "currency": "USD",
+        "formatted_text": "$40,000,000"
+      },
+      "waiting_period": null
+    }
+  ],
+  "premiums": [
+    {
+      "premium_type": "annual_minimum_premium",
+      "amount": {
+        "value": null,
+        "currency": null,
+        "formatted_text": null
+      },
+      "coverage_reference": null,
+      "payment_frequency": null,
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "annual_deposit_premium",
+      "amount": {
+        "value": null,
+        "currency": null,
+        "formatted_text": null
+      },
+      "coverage_reference": null,
+      "payment_frequency": "quarterly",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "quarterly_deposit_premium",
+      "amount": {
+        "value": null,
+        "currency": null,
+        "formatted_text": null
+      },
+      "coverage_reference": null,
+      "payment_frequency": "quarterly",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "annual_premium",
+      "amount": {
+        "value": 1600000.0,
+        "currency": "USD",
+        "formatted_text": "$1,600,000"
+      },
+      "coverage_reference": "First Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "annual_premium",
+      "amount": {
+        "value": 2240000.0,
+        "currency": "USD",
+        "formatted_text": "$2,240,000"
+      },
+      "coverage_reference": "Third Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "deposit_premium",
+      "amount": {
+        "value": 2000000.0,
+        "currency": "USD",
+        "formatted_text": "$2,000,000"
+      },
+      "coverage_reference": "First Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "deposit_premium",
+      "amount": {
+        "value": 2800000.0,
+        "currency": "USD",
+        "formatted_text": "$2,800,000"
+      },
+      "coverage_reference": "Third Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "quarterly_deposit",
+      "amount": {
+        "value": 500000.0,
+        "currency": "USD",
+        "formatted_text": "$500,000"
+      },
+      "coverage_reference": "First Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "quarterly",
+      "due_date": null,
+      "taxes_and_fees": null
+    },
+    {
+      "premium_type": "quarterly_deposit",
+      "amount": {
+        "value": 700000.0,
+        "currency": "USD",
+        "formatted_text": "$700,000"
+      },
+      "coverage_reference": "Third Property Catastrophe Excess of Loss Reinsurance",
+      "payment_frequency": "quarterly",
+      "due_date": null,
+      "taxes_and_fees": null
+    }
+  ],
+  "coverages": [],
+  "exclusions": [
+    {
+      "exclusion_id": null,
+      "exclusion_type": "financial_exclusion",
+      "title": "Financial Guarantee and Insolvency",
+      "description": "This Contract does not apply to financial guarantee and insolvency.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "nuclear_exclusion",
+      "title": "Nuclear Risks",
+      "description": "Nuclear risks as defined in the 'Nuclear Incident Exclusion Clause - Physical Damage - Reinsurance (U.S.A.)' attached to and forming part of this Contract.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": [
+        "Nuclear Incident Exclusion Clause - Physical Damage - Reinsurance (U.S.A.)"
+      ]
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "war_exclusion",
+      "title": "War and Hostilities",
+      "description": "Loss or damage caused by war, invasion, hostilities, acts of foreign enemies, civil war, rebellion, insurrection, military or usurped power, or martial law or confiscation by order of any government or public authority.",
+      "applies_to_coverage": [],
+      "exceptions": [
+        "This exclusion shall not apply to loss or damage covered under a standard policy with a standard War Exclusion Clause."
+      ],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "pool_exclusion",
+      "title": "Pools, Associations and Syndicates",
+      "description": "Loss or liability excluded under the provisions of the 'Pools, Associations and Syndicates Exclusion Clause' attached to and forming part of this Contract.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": [
+        "Pools, Associations and Syndicates Exclusion Clause"
+      ]
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "insolvency_exclusion",
+      "title": "Insolvency Fund Liability",
+      "description": "All liability of the Company arising by contract, operation of law, or otherwise, from its participation or membership in any insolvency fund.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "third_party_liability_exclusion",
+      "title": "Third Party Liability",
+      "description": "All third party liability, including Section II of Homeowners.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "crop_exclusion",
+      "title": "Growing or Standing Crops",
+      "description": "Loss or damage to growing or standing crops.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "pollution_exclusion",
+      "title": "Pollution and Seepage",
+      "description": "Pollution and seepage coverages excluded under the provisions of the 'Pollution and Seepage Exclusion Clause (BRMA 39A)' attached to and forming part of this Contract.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": [
+        "Pollution and Seepage Exclusion Clause (BRMA 39A)"
+      ]
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "terrorism_exclusion",
+      "title": "Terrorism",
+      "description": "Terrorism, as described in the provisions of the 'Terrorism Exclusion (NMA 2930c)' attached to and forming part of this Contract.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": [
+        "Terrorism Exclusion (NMA 2930c)"
+      ]
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "flood_exclusion",
+      "title": "Flood and Earthquake",
+      "description": "Flood and/or earthquake when written as such.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "fungi_exclusion",
+      "title": "Fungi",
+      "description": "Loss, damage, cost or expense arising from fungi unless directly or indirectly caused by or contributed to by or arising from a covered peril under the Company's original policy.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "reinsurance_exclusion",
+      "title": "Reinsurance Assumed",
+      "description": "Reinsurance assumed.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "crop_exclusion",
+      "title": "Growing, Standing or Drying Crops or Timber",
+      "description": "Growing, standing or drying crops or timber.",
+      "applies_to_coverage": [],
+      "exceptions": [],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "nuclear_exclusion",
+      "title": "Nuclear Incident Exclusion Clause - Physical Damage - Reinsurance (U.S.A.)",
+      "description": "This reinsurance does not cover any loss or liability accruing from pools formed for covering Atomic or Nuclear Energy risks, or from insurance against physical damage to nuclear installations.",
+      "applies_to_coverage": [],
+      "exceptions": [
+        "Risks using radioactive isotopes where nuclear exposure is not the primary hazard."
+      ],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "pool_exclusion",
+      "title": "Pools, Associations and Syndicates Exclusion Clause",
+      "description": "Excludes business derived from pools, associations, or syndicates maintaining their own reinsurance facilities, except for certain specified exceptions.",
+      "applies_to_coverage": [],
+      "exceptions": [
+        "Automobile Insurance Plans",
+        "Inland Marine risks",
+        "Contingent Business Interruption under certain conditions"
+      ],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "pollution_exclusion",
+      "title": "Pollution and Seepage Exclusion Clause",
+      "description": "Excludes loss or damage arising from seepage, pollution, or contamination, except for smoke-related contamination.",
+      "applies_to_coverage": [],
+      "exceptions": [
+        "Cost of removing debris of property damaged by a covered loss, subject to a limit of 25% of the property loss."
+      ],
+      "cross_references": []
+    },
+    {
+      "exclusion_id": null,
+      "exclusion_type": "terrorism_exclusion",
+      "title": "Terrorism Exclusion (Property Treaty Reinsurance)",
+      "description": "Excludes loss, damage, cost, or expense caused by acts of terrorism, except for personal lines not involving biological, chemical, radioactive, or nuclear contamination.",
+      "applies_to_coverage": [],
+      "exceptions": [
+        "Personal lines coverage for actual loss or damage caused by terrorism, excluding contamination or explosion."
+      ],
+      "cross_references": []
+    }
+  ],
+  "extraction_metadata": {}
+}

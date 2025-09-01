@@ -1,0 +1,17 @@
+Document Processing Summary
+===========================
+
+Document ID: test-doc-123
+Filename: Falcon1.pdf
+Processed: 2025-08-31 20:01:20
+
+Results:
+- Chunks generated: 32
+- Embeddings created: 32
+- Files saved: 4
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200120_test-doc-123_Falcon1/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200120_test-doc-123_Falcon1/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200120_test-doc-123_Falcon1/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200120_test-doc-123_Falcon1/metadata.json

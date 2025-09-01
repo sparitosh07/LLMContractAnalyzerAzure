@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "3e17f43a-85c2-474c-8d7c-ec012b41d095",
+      "content": "Title: test contract text\n\ntest contract text",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test.txt",
+          "url": "test.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test.txt",
+      "token_count": 7
+    }
+  ]
+}

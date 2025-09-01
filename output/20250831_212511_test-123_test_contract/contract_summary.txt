@@ -1,0 +1,21 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-123
+Filename: test_contract.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Policy Number: ABC123
+- Quote Number: QT-2024-001
+
+Limits (1 found):
+- Limit for General Liability coverage: $1,000,000
+
+Premiums (1 found):
+- annual_premium: $5,000
+
+Coverages (1 found):
+- General Liability: CoverageTypeEnum.LIABILITY

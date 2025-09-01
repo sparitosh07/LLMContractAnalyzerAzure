@@ -1,0 +1,8 @@
+Contract Extraction Summary
+=============================
+
+Document ID: ce7d799f-3128-4b29-8bde-0d9e76a3d351
+Filename: test_contract.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:

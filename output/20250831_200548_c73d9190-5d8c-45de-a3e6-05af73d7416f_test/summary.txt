@@ -1,0 +1,17 @@
+Document Processing Summary
+===========================
+
+Document ID: c73d9190-5d8c-45de-a3e6-05af73d7416f
+Filename: test.txt
+Processed: 2025-08-31 20:05:48
+
+Results:
+- Chunks generated: 1
+- Embeddings created: 1
+- Files saved: 4
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200548_c73d9190-5d8c-45de-a3e6-05af73d7416f_test/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200548_c73d9190-5d8c-45de-a3e6-05af73d7416f_test/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200548_c73d9190-5d8c-45de-a3e6-05af73d7416f_test/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_200548_c73d9190-5d8c-45de-a3e6-05af73d7416f_test/metadata.json

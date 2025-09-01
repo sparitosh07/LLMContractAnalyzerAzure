@@ -1,0 +1,24 @@
+Document Processing Summary
+===========================
+
+Document ID: test-doc-123
+Filename: Falcon1.pdf
+Processed: 2025-08-31 21:03:15
+
+Results:
+- Chunks generated: 32
+- Embeddings created: 32
+- Files saved: 5
+
+Timing Performance:
+- Total processing time: 0.00s
+- PDF processing: 12.91s
+- Parallel processing: 4.54s
+- Search index update: 0.00s
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210315_test-doc-123_Falcon1/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210315_test-doc-123_Falcon1/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210315_test-doc-123_Falcon1/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210315_test-doc-123_Falcon1/metadata.json
+- timing: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210315_test-doc-123_Falcon1/timing_stats.json

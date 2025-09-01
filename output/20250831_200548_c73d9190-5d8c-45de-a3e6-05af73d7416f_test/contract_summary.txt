@@ -1,0 +1,8 @@
+Contract Extraction Summary
+=============================
+
+Document ID: c73d9190-5d8c-45de-a3e6-05af73d7416f
+Filename: test.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:

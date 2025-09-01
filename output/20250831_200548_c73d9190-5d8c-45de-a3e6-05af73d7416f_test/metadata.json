@@ -1,0 +1,23 @@
+{
+  "document_info": {
+    "document_id": "c73d9190-5d8c-45de-a3e6-05af73d7416f",
+    "filename": "test.txt",
+    "processed_at": "2025-08-31T20:05:48.320607"
+  },
+  "processing_stats": {
+    "total_chunks": 1,
+    "total_tokens": 9,
+    "avg_tokens_per_chunk": 9.0,
+    "source_file": "test.txt",
+    "file_extension": ".txt",
+    "chunk_size": 1000,
+    "chunk_overlap": 200
+  },
+  "metadata": {
+    "content_type": "text/plain"
+  },
+  "config_used": {
+    "local_storage_enabled": true,
+    "base_path": "/Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output"
+  }
+}

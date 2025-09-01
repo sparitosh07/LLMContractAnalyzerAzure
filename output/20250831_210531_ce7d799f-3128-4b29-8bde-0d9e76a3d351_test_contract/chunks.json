@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "4fcf822c-2e6f-45be-ba20-92c67bd35f9f",
+      "content": "Title: test_contract.txt\n\nThis is a test insurance contract with policy number ABC123. The premium is $50,000 annually. War exclusion applies.",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test_contract.txt",
+          "url": "test_contract.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test_contract.txt",
+      "token_count": 20
+    }
+  ]
+}

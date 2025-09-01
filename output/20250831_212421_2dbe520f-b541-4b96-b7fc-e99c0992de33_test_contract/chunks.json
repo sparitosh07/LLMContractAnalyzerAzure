@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "91360fc7-9913-4be6-9640-1e888de82970",
+      "content": "Title: test_contract.txt\n\nThis is a test insurance contract. Policy Number: ABC123. Quote Number: QT-2024-001. Premium Amount: $5,000 annually. Coverage: General Liability with limit of $1,000,000.",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test_contract.txt",
+          "url": "test_contract.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test_contract.txt",
+      "token_count": 25
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+Document Processing Summary
+===========================
+
+Document ID: 9ded813f-21c8-4372-9a4b-1727f8c0cd0f
+Filename: test_contract.txt
+Processed: 2025-08-31 21:00:26
+
+Results:
+- Chunks generated: 1
+- Embeddings created: 1
+- Files saved: 5
+
+Timing Performance:
+- Total processing time: 0.00s
+- PDF processing: 0.00s
+- Parallel processing: 0.58s
+- Search index update: 0.00s
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210026_9ded813f-21c8-4372-9a4b-1727f8c0cd0f_test_contract/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210026_9ded813f-21c8-4372-9a4b-1727f8c0cd0f_test_contract/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210026_9ded813f-21c8-4372-9a4b-1727f8c0cd0f_test_contract/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210026_9ded813f-21c8-4372-9a4b-1727f8c0cd0f_test_contract/metadata.json
+- timing: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250831_210026_9ded813f-21c8-4372-9a4b-1727f8c0cd0f_test_contract/timing_stats.json
