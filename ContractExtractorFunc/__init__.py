@@ -11,8 +11,11 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import azure.functions as func
 
-from .config import get_app_config, AppConfig
-from .contract_extractor import ContractExtractor, create_contract_extractor, ContractExtractionConfig
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'DocParserFunc'))
+from config import get_app_config, AppConfig, get_contract_extraction_prompts
+from .contract_extractor import ContractExtractor, create_contract_extractor
 from .local_storage import LocalFileSaver, create_local_file_saver
 from .utils.logging_utils import (
     track_activity, monitor_performance, 
@@ -95,11 +98,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
             # Initialize contract extractor with LangGraph
             logger.info("=== Initializing LangGraph Contract Extractor ===")
-            extraction_config = ContractExtractionConfig(
-                chunk_size=extraction_chunk_size,
-                chunk_overlap=extraction_chunk_overlap
+            # Use config from main config file, but allow override from request
+            extraction_config = config.contract_extraction
+            if extraction_chunk_size != 2000:  # Non-default value provided
+                extraction_config.chunk_size = extraction_chunk_size
+            if extraction_chunk_overlap != 400:  # Non-default value provided  
+                extraction_config.chunk_overlap = extraction_chunk_overlap
+                
+            contract_extractor = create_contract_extractor(
+                config.openai, 
+                extraction_config, 
+                prompt_generation_func=get_contract_extraction_prompts
             )
-            contract_extractor = create_contract_extractor(config.openai, extraction_config)
             logger.info(f"Contract extractor initialized with chunk_size={extraction_chunk_size}, overlap={extraction_chunk_overlap}")
             
             # Extract contract data using LangGraph map-reduce

@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error": "'extraction_metadata'",
+  "extraction_method": "langgraph_map_reduce"
+}

@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "9265290b-d8a8-4b46-9e58-60d6f57fa4b5",
+      "content": "Title: test-full.txt\n\nThis is a test insurance contract. Policy Number: XYZ789. General Liability coverage limit: $2,000,000. Premium: $7,500 annually. Professional Liability limit: $500,000.",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test-full.txt",
+          "url": "test-full.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test-full.txt",
+      "token_count": 23
+    }
+  ]
+}

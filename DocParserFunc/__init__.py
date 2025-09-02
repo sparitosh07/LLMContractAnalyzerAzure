@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 
 import azure.functions as func
 
-from .config import get_app_config, AppConfig
+from .config import get_app_config, AppConfig, get_contract_extraction_prompts
 from .pdf_processor import create_pdf_processor
 from .utils.logging_utils import track_activity, LoggingConfig, exception_handler
 
@@ -292,14 +292,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 response["contract_extraction"] = contract_extraction_result
                 logger.info("Contract extraction results added to response")
             elif extract_contract:
-                response["contract_extraction_error"] = str(contract_extraction_result) if isinstance(contract_extraction_result, Exception) else contract_extraction_result.get("error")
+                if isinstance(contract_extraction_result, Exception):
+                    response["contract_extraction_error"] = str(contract_extraction_result)
+                elif contract_extraction_result is None:
+                    response["contract_extraction_error"] = "Contract extraction function returned no result"
+                else:
+                    response["contract_extraction_error"] = contract_extraction_result.get("error", "Unknown error")
                 logger.error("Contract extraction failed")
             
             # Determine status code
             if extract_contract:
                 # Both functions must succeed for 200
-                chunk_success = not isinstance(chunk_embed_result, Exception) and "error" not in chunk_embed_result
-                extract_success = not isinstance(contract_extraction_result, Exception) and "error" not in contract_extraction_result
+                chunk_success = not isinstance(chunk_embed_result, Exception) and chunk_embed_result is not None and "error" not in chunk_embed_result
+                extract_success = not isinstance(contract_extraction_result, Exception) and contract_extraction_result is not None and "error" not in contract_extraction_result
                 status_code = 200 if (chunk_success and extract_success) else 207
             else:
                 # Only ChunkEmbedFunc needs to succeed

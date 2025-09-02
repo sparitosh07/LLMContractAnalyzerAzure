@@ -1,0 +1,17 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-final-123
+Filename: test.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Policy Number: ABC123
+
+Limits (1 found):
+- General Liability coverage limit: $1,000,000
+
+Premiums (1 found):
+- annual_premium: $5,000

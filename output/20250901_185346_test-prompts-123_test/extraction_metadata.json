@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error": "name 'json' is not defined",
+  "extraction_method": "langgraph_map_reduce"
+}

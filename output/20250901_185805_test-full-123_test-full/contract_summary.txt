@@ -1,0 +1,18 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-full-123
+Filename: test-full.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:
+
+Unique Market Reference:
+- Policy Number: XYZ789
+
+Limits (2 found):
+- General Liability coverage limit: $2,000,000
+- Professional Liability limit: $500,000
+
+Premiums (1 found):
+- annual_premium: $7,500

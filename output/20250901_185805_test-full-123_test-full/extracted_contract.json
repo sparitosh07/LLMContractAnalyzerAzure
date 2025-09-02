@@ -1,0 +1,54 @@
+{
+  "unique_market_reference": {
+    "policy_number": "XYZ789",
+    "quote_number": null,
+    "broker_reference": null,
+    "insurer_reference": null,
+    "umr_code": null,
+    "certificate_number": null,
+    "endorsement_numbers": []
+  },
+  "limits": [
+    {
+      "limit_type": "aggregate",
+      "amount": {
+        "value": 2000000.0,
+        "currency": "USD",
+        "formatted_text": "$2,000,000"
+      },
+      "description": "General Liability coverage limit",
+      "coverage_reference": null,
+      "deductible": null,
+      "waiting_period": null
+    },
+    {
+      "limit_type": "aggregate",
+      "amount": {
+        "value": 500000.0,
+        "currency": "USD",
+        "formatted_text": "$500,000"
+      },
+      "description": "Professional Liability limit",
+      "coverage_reference": null,
+      "deductible": null,
+      "waiting_period": null
+    }
+  ],
+  "premiums": [
+    {
+      "premium_type": "annual_premium",
+      "amount": {
+        "value": 7500.0,
+        "currency": "USD",
+        "formatted_text": "$7,500"
+      },
+      "coverage_reference": null,
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    }
+  ],
+  "coverages": [],
+  "exclusions": [],
+  "extraction_metadata": {}
+}

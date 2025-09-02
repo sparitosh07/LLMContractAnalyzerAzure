@@ -1,10 +1,18 @@
 """Configuration management for Azure Function."""
 
 import os
+import json
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 from pathlib import Path
-from .utils.logging_utils import get_logger
+try:
+    from .utils.logging_utils import get_logger
+except ImportError:
+    # Handle case when imported from other modules
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
@@ -164,6 +172,31 @@ class LocalStorageConfig:
 
 
 @dataclass
+class ContractExtractionConfig:
+    """Contract extraction configuration with map-reduce prompts."""
+    chunk_size: int = 2000
+    chunk_overlap: int = 400
+    max_tokens_per_chunk: int = 4000
+    temperature: float = 0.0
+    max_retries: int = 3
+    map_prompt: Optional[str] = None
+    reduce_prompt: Optional[str] = None
+    
+    @classmethod
+    def from_env(cls) -> "ContractExtractionConfig":
+        """Create config from environment variables."""
+        return cls(
+            chunk_size=int(os.getenv("CONTRACT_EXTRACTION_CHUNK_SIZE", "2000")),
+            chunk_overlap=int(os.getenv("CONTRACT_EXTRACTION_CHUNK_OVERLAP", "400")),
+            max_tokens_per_chunk=int(os.getenv("CONTRACT_EXTRACTION_MAX_TOKENS", "4000")),
+            temperature=float(os.getenv("CONTRACT_EXTRACTION_TEMPERATURE", "0.0")),
+            max_retries=int(os.getenv("CONTRACT_EXTRACTION_MAX_RETRIES", "3")),
+            map_prompt=os.getenv("CONTRACT_EXTRACTION_MAP_PROMPT"),
+            reduce_prompt=os.getenv("CONTRACT_EXTRACTION_REDUCE_PROMPT")
+        )
+
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
     openai: OpenAIConfig
@@ -171,6 +204,7 @@ class AppConfig:
     search: SearchConfig
     processing: ProcessingConfig
     local_storage: LocalStorageConfig
+    contract_extraction: ContractExtractionConfig
     debug: bool = False
     
     @classmethod
@@ -183,6 +217,7 @@ class AppConfig:
                 search=SearchConfig.from_env(),
                 processing=ProcessingConfig.from_env(),
                 local_storage=LocalStorageConfig.from_env(),
+                contract_extraction=ContractExtractionConfig.from_env(),
                 debug=os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
             )
         except ValueError as e:
@@ -213,6 +248,16 @@ def validate_config(config: AppConfig) -> Dict[str, Any]:
         issues.append("Chunk overlap must be less than chunk size")
     if config.processing.batch_size < 1:
         issues.append("Batch size must be at least 1")
+    
+    # Validate contract extraction config
+    if config.contract_extraction.chunk_size < 100:
+        issues.append("Contract extraction chunk size must be at least 100")
+    if config.contract_extraction.chunk_overlap >= config.contract_extraction.chunk_size:
+        issues.append("Contract extraction chunk overlap must be less than chunk size")
+    if config.contract_extraction.temperature < 0 or config.contract_extraction.temperature > 2:
+        issues.append("Contract extraction temperature must be between 0 and 2")
+    if config.contract_extraction.max_retries < 1:
+        issues.append("Contract extraction max retries must be at least 1")
     
     return {
         "valid": len(issues) == 0,
@@ -263,9 +308,101 @@ ENV_VARS_HELP = {
     "ENCODING_NAME": "Token encoding name (default: cl100k_base)",
     "TIMEOUT_SECONDS": "Request timeout in seconds (default: 300)",
     
+    # Optional - Contract Extraction
+    "CONTRACT_EXTRACTION_CHUNK_SIZE": "Contract extraction chunk size (default: 2000)",
+    "CONTRACT_EXTRACTION_CHUNK_OVERLAP": "Contract extraction chunk overlap (default: 400)",
+    "CONTRACT_EXTRACTION_MAX_TOKENS": "Max tokens per chunk for extraction (default: 4000)",
+    "CONTRACT_EXTRACTION_TEMPERATURE": "LLM temperature for extraction (default: 0.0)",
+    "CONTRACT_EXTRACTION_MAX_RETRIES": "Max retries for extraction (default: 3)",
+    "CONTRACT_EXTRACTION_MAP_PROMPT": "Custom map prompt for contract extraction",
+    "CONTRACT_EXTRACTION_REDUCE_PROMPT": "Custom reduce prompt for contract extraction",
+    
     # Optional - General
     "DEBUG": "Enable debug logging (default: false)"
 }
+
+
+def get_contract_extraction_prompts(schema: Dict[str, Any], instructions: str) -> Dict[str, str]:
+    """
+    Generate map and reduce prompts for contract extraction.
+    
+    Args:
+        schema: Pydantic schema dictionary for extraction
+        instructions: Extraction instructions text
+        
+    Returns:
+        Dictionary containing 'map_prompt' and 'reduce_prompt'
+    """
+    
+    map_prompt = f"""
+You are an expert insurance contract analyzer. Extract structured information from the provided document text chunk.
+
+{instructions}
+
+IMPORTANT: 
+- Only extract information that is explicitly present in this text chunk
+- Use null for missing information
+- Return valid JSON only
+- Be precise and concise
+- Focus on identifying individual contract elements in this chunk
+
+Target JSON Schema:
+{json.dumps(schema, indent=2)}
+
+Extract the following structure from the text chunk:
+{{
+    "unique_market_reference": {{
+        "policy_number": null,
+        "quote_number": null,
+        "broker_reference": null,
+        "insurer_reference": null,
+        "umr_code": null,
+        "certificate_number": null,
+        "endorsement_numbers": []
+    }},
+    "limits": [],
+    "premiums": [],
+    "coverages": [],
+    "exclusions": []
+}}
+"""
+
+    reduce_prompt = f"""
+You are an expert insurance contract analyst. Your task is to combine and consolidate contract extractions from multiple document chunks into a single comprehensive contract structure.
+
+{instructions}
+
+IMPORTANT:
+- Merge information from all provided chunk extractions
+- Remove duplicates based on semantic similarity, not just exact matches
+- Prioritize the most complete and detailed information when combining
+- Ensure consistency across all merged data
+- Return valid JSON only
+
+Target JSON Schema:
+{json.dumps(schema, indent=2)}
+
+Rules for combining:
+1. Unique Market Reference: Take first non-null value for each field
+2. Lists (limits, premiums, coverages, exclusions): Combine all items and deduplicate
+3. When deduplicating, consider semantic similarity (e.g., "General Liability" = "GL Coverage")
+4. Preserve all unique valuable information
+5. Maintain data structure integrity
+
+Return the consolidated contract structure:
+{{
+    "unique_market_reference": {{}},
+    "limits": [],
+    "premiums": [],
+    "coverages": [],
+    "exclusions": []
+}}
+"""
+    
+    return {
+        "map_prompt": map_prompt.strip(),
+        "reduce_prompt": reduce_prompt.strip()
+    }
 
 
 def print_env_vars_help():

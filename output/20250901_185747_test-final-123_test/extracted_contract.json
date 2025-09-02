@@ -1,0 +1,42 @@
+{
+  "unique_market_reference": {
+    "policy_number": "ABC123",
+    "quote_number": null,
+    "broker_reference": null,
+    "insurer_reference": null,
+    "umr_code": null,
+    "certificate_number": null,
+    "endorsement_numbers": []
+  },
+  "limits": [
+    {
+      "limit_type": "aggregate",
+      "amount": {
+        "value": 1000000.0,
+        "currency": "USD",
+        "formatted_text": "$1,000,000"
+      },
+      "description": "General Liability coverage limit",
+      "coverage_reference": null,
+      "deductible": null,
+      "waiting_period": null
+    }
+  ],
+  "premiums": [
+    {
+      "premium_type": "annual_premium",
+      "amount": {
+        "value": 5000.0,
+        "currency": "USD",
+        "formatted_text": "$5,000"
+      },
+      "coverage_reference": null,
+      "payment_frequency": "annual",
+      "due_date": null,
+      "taxes_and_fees": null
+    }
+  ],
+  "coverages": [],
+  "exclusions": [],
+  "extraction_metadata": {}
+}

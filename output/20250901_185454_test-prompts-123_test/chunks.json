@@ -1,0 +1,22 @@
+{
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "id": "55ff2e59-f89e-482f-aa76-cb0c1a7d7b81",
+      "content": "Title: test.txt\n\nThis is a test insurance contract. Policy Number: ABC123. General Liability coverage limit: $1,000,000. Premium: $5,000 annually.",
+      "chunk_index": 0,
+      "metadata": {
+        "source": {
+          "filename": "test.txt",
+          "url": "test.txt",
+          "mtime": 0.0,
+          "content_type": "text/plain",
+          "file_extension": ".txt"
+        }
+      },
+      "file_extension": ".txt",
+      "title": "test.txt",
+      "token_count": 19
+    }
+  ]
+}

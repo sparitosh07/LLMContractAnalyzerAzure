@@ -1,0 +1,24 @@
+Document Processing Summary
+===========================
+
+Document ID: test-prompts-123
+Filename: test.txt
+Processed: 2025-09-01 18:54:55
+
+Results:
+- Chunks generated: 1
+- Embeddings created: 1
+- Files saved: 5
+
+Timing Performance:
+- Total processing time: 0.00s
+- PDF processing: 0.00s
+- Parallel processing: 0.00s
+- Search index update: 0.00s
+
+Files created:
+- original_text: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_185454_test-prompts-123_test/original_text.txt
+- chunks: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_185454_test-prompts-123_test/chunks.json
+- embeddings: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_185454_test-prompts-123_test/embeddings.json
+- metadata: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_185454_test-prompts-123_test/metadata.json
+- timing: /Users/Paru/Desktop/Agents/ContractWordingAzureFunc/output/20250901_185454_test-prompts-123_test/timing_stats.json

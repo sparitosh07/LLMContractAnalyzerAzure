@@ -1,0 +1,8 @@
+Contract Extraction Summary
+=============================
+
+Document ID: test-direct-123
+Filename: test.txt
+Extraction Method: LangGraph Map-Reduce
+
+Contract Details:

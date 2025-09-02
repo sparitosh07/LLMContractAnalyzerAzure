@@ -8,7 +8,6 @@ import asyncio
 import os
 import time
 from typing import List, Dict, Any, Optional, TypedDict
-from dataclasses import dataclass
 from pathlib import Path
 
 from langgraph.graph import StateGraph
@@ -47,23 +46,16 @@ class InternalState(InputState, OutputState):
     timing_stats: Dict[str, float]
 
 
-@dataclass
-class ContractExtractionConfig:
-    """Configuration for contract extraction"""
-    chunk_size: int = 2000
-    chunk_overlap: int = 400
-    max_tokens_per_chunk: int = 4000
-    temperature: float = 0.0
-    max_retries: int = 3
 
 
 class ContractExtractor:
     """LangGraph-based contract extractor using map-reduce methodology"""
     
-    def __init__(self, openai_config, extraction_config: ContractExtractionConfig):
+    def __init__(self, openai_config, extraction_config, prompt_generation_func=None):
         """Initialize contract extractor"""
         self.config = extraction_config
         self.openai_config = openai_config
+        self.prompt_generation_func = prompt_generation_func
         
         # Initialize LangSmith client for monitoring
         self.langsmith_enabled = False
@@ -111,13 +103,22 @@ class ContractExtractor:
         # Add nodes for map-reduce workflow
         builder.add_node("split_document", self._split_document_node)
         builder.add_node("map_extract", self._map_extract_node)
+        builder.add_node("should_collapse", self._should_collapse_node)
         builder.add_node("reduce_combine", self._reduce_combine_node)
         builder.add_node("validate_output", self._validate_output_node)
         
         # Define workflow edges
         builder.set_entry_point("split_document")
         builder.add_edge("split_document", "map_extract")
-        builder.add_edge("map_extract", "reduce_combine")
+        builder.add_edge("map_extract", "should_collapse")
+        builder.add_conditional_edges(
+            "should_collapse",
+            self._should_collapse_condition,
+            {
+                "continue": "reduce_combine",
+                "skip": "validate_output"
+            }
+        )
         builder.add_edge("reduce_combine", "validate_output")
         builder.set_finish_point("validate_output")
         
@@ -180,7 +181,9 @@ class ContractExtractor:
         chunks = state["text_chunks"]
         chunk_extractions = []
         
-        extraction_prompt = self._get_extraction_prompt()
+        # Get prompts (map and reduce)
+        prompts = self._get_extraction_prompts()
+        map_prompt = prompts["map_prompt"]
         
         # Track LangSmith session if available
         session_id = f"contract_extraction_{state['document_id']}" if self.langsmith_enabled else None
@@ -191,7 +194,7 @@ class ContractExtractor:
             try:
                 # Create extraction prompt for this chunk
                 messages = [
-                    HumanMessage(content=f"{extraction_prompt}\n\nDocument Text Chunk:\n{chunk}")
+                    HumanMessage(content=f"{map_prompt}\n\nDocument Text Chunk:\n{chunk}")
                 ]
                 
                 # Get LLM response with LangSmith tracking
@@ -255,14 +258,137 @@ class ContractExtractor:
         
         return state
     
+    def _should_collapse_node(self, state: InternalState) -> InternalState:
+        """Determine if we should proceed with reduce phase"""
+        logger.info("=== Should Collapse Decision Phase ===")
+        
+        chunk_extractions = state["chunk_extractions"]
+        successful_extractions = [ext for ext in chunk_extractions if ext["success"]]
+        
+        # Add metadata for decision making
+        state["collapse_decision"] = {
+            "total_chunks": len(chunk_extractions),
+            "successful_chunks": len(successful_extractions),
+            "should_reduce": len(successful_extractions) > 1,
+            "decision_reason": "Multiple successful extractions need combining" if len(successful_extractions) > 1 else "Single or no extractions, skip reduce"
+        }
+        
+        logger.info(f"Collapse decision: {state['collapse_decision']['should_reduce']} - {state['collapse_decision']['decision_reason']}")
+        
+        # If we're going to skip reduce, set up the final result here
+        if len(successful_extractions) <= 1:
+            if len(successful_extractions) == 1:
+                # Set the single extraction as final result
+                state["extracted_contract"] = successful_extractions[0]["extraction"]
+                logger.info("Single extraction found, using directly")
+            else:
+                # No successful extractions
+                state["extracted_contract"] = {
+                    "unique_market_reference": {},
+                    "limits": [],
+                    "premiums": [],
+                    "coverages": [],
+                    "exclusions": []
+                }
+                logger.info("No successful extractions, using empty structure")
+        
+        return state
+    
+    def _should_collapse_condition(self, state: InternalState) -> str:
+        """Conditional logic for should_collapse node"""
+        successful_extractions = [ext for ext in state["chunk_extractions"] if ext["success"]]
+        
+        # Continue to reduce if we have multiple successful extractions
+        if len(successful_extractions) > 1:
+            return "continue"
+        else:
+            return "skip"
+    
     def _reduce_combine_node(self, state: InternalState) -> InternalState:
-        """Reduce phase: Combine extractions from all chunks"""
+        """Reduce phase: Combine extractions from all chunks using LLM"""
         reduce_start = time.time()
         logger.info("=== Reduce Combination Phase ===")
         
         chunk_extractions = state["chunk_extractions"]
+        successful_extractions = [ext for ext in chunk_extractions if ext["success"]]
         
-        # Initialize combined data structure
+        if not successful_extractions:
+            logger.warning("No successful extractions to combine")
+            state["extracted_contract"] = {
+                "unique_market_reference": {},
+                "limits": [],
+                "premiums": [],
+                "coverages": [],
+                "exclusions": []
+            }
+        elif len(successful_extractions) == 1:
+            # Only one chunk, use its extraction directly
+            logger.info("Single chunk extraction, using directly")
+            state["extracted_contract"] = successful_extractions[0]["extraction"]
+        else:
+            # Multiple chunks, use LLM-based reduction
+            logger.info(f"Combining extractions from {len(successful_extractions)} chunks using LLM")
+            
+            # Get reduce prompt
+            prompts = self._get_extraction_prompts()
+            reduce_prompt = prompts["reduce_prompt"]
+            
+            # Prepare chunk extractions for the reduce prompt
+            chunk_extractions_json = json.dumps([ext["extraction"] for ext in successful_extractions], indent=2)
+            reduce_prompt_with_data = reduce_prompt.replace("{chunk_extractions}", chunk_extractions_json)
+            
+            try:
+                # Generate session ID for LangSmith tracking
+                session_id = f"contract_extraction_{state['document_id']}" if self.langsmith_enabled else None
+                
+                # Use LLM to combine extractions
+                messages = [HumanMessage(content=reduce_prompt_with_data)]
+                
+                if self.langsmith_enabled and session_id:
+                    logger.info(f"LangSmith tracking enabled for reduce phase: {session_id}")
+                
+                response = self.llm.invoke(messages)
+                
+                # Parse LLM response
+                try:
+                    content = response.content.strip()
+                    if content.startswith("```json"):
+                        content = content[7:-3].strip()
+                    elif content.startswith("```"):
+                        content = content[3:-3].strip()
+                    
+                    combined_data = json.loads(content)
+                    state["extracted_contract"] = combined_data
+                    logger.info("LLM-based reduce phase completed successfully")
+                    
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse LLM reduce response, falling back to rule-based combination: {str(e)}")
+                    state["extracted_contract"] = self._rule_based_combination(successful_extractions)
+                    
+            except Exception as e:
+                logger.error(f"LLM reduce failed, falling back to rule-based combination: {str(e)}")
+                state["extracted_contract"] = self._rule_based_combination(successful_extractions)
+        
+        # Generate session ID for LangSmith tracking
+        session_id = f"contract_extraction_{state['document_id']}" if self.langsmith_enabled else None
+        
+        state["extraction_metadata"] = {
+            "chunks_processed": len(chunk_extractions),
+            "successful_chunks": len(successful_extractions),
+            "extraction_method": "langgraph_map_reduce_llm",
+            "model_used": getattr(self.llm, 'model_name', 'gpt-4o'),
+            "langsmith_session": session_id if self.langsmith_enabled else None
+        }
+        state["timing_stats"]["reduce_combine_time"] = time.time() - reduce_start
+        
+        logger.info(f"Reduce phase completed in {state['timing_stats']['reduce_combine_time']:.2f}s")
+        
+        return state
+    
+    def _rule_based_combination(self, successful_extractions: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Fallback rule-based combination when LLM reduce fails"""
+        logger.info("Using rule-based combination as fallback")
+        
         combined_data = {
             "unique_market_reference": {},
             "limits": [],
@@ -272,10 +398,7 @@ class ContractExtractor:
         }
         
         # Combine extractions from all successful chunks
-        for chunk_ext in chunk_extractions:
-            if not chunk_ext["success"]:
-                continue
-                
+        for chunk_ext in successful_extractions:
             extraction = chunk_ext["extraction"]
             
             # Merge unique market references (take first non-empty values)
@@ -291,32 +414,23 @@ class ContractExtractor:
                     combined_data[list_field].extend(extraction[list_field])
         
         # Deduplicate and clean up
-        combined_data = self._deduplicate_extractions(combined_data)
-        
-        logger.info(f"Reduce phase completed - Combined: {len(combined_data['limits'])} limits, "
-                   f"{len(combined_data['premiums'])} premiums, {len(combined_data['coverages'])} coverages, "
-                   f"{len(combined_data['exclusions'])} exclusions")
-        
-        state["extracted_contract"] = combined_data
-        
-        # Generate session ID for LangSmith tracking
-        session_id = f"contract_extraction_{state['document_id']}" if self.langsmith_enabled else None
-        
-        state["extraction_metadata"] = {
-            "chunks_processed": len(chunk_extractions),
-            "successful_chunks": sum(1 for ext in chunk_extractions if ext["success"]),
-            "extraction_method": "langgraph_map_reduce",
-            "model_used": getattr(self.llm, 'model_name', 'gpt-4o'),
-            "langsmith_session": session_id if self.langsmith_enabled else None
-        }
-        state["timing_stats"]["reduce_combine_time"] = time.time() - reduce_start
-        
-        return state
+        return self._deduplicate_extractions(combined_data)
     
     def _validate_output_node(self, state: InternalState) -> InternalState:
         """Validate and finalize extracted contract data"""
         validation_start = time.time()
         logger.info("=== Validation Phase ===")
+        
+        # Ensure extraction_metadata exists
+        if "extraction_metadata" not in state:
+            session_id = f"contract_extraction_{state['document_id']}" if self.langsmith_enabled else None
+            state["extraction_metadata"] = {
+                "chunks_processed": len(state.get("chunk_extractions", [])),
+                "successful_chunks": len([ext for ext in state.get("chunk_extractions", []) if ext.get("success", False)]),
+                "extraction_method": "langgraph_map_reduce",
+                "model_used": getattr(self.llm, 'model_name', 'gpt-4o'),
+                "langsmith_session": session_id if self.langsmith_enabled else None
+            }
         
         try:
             # Validate against pydantic model
@@ -346,12 +460,28 @@ class ContractExtractor:
         
         return state
     
-    def _get_extraction_prompt(self) -> str:
-        """Get extraction prompt with schema and instructions"""
+    def _get_extraction_prompts(self) -> Dict[str, str]:
+        """Get map and reduce prompts for contract extraction"""
         schema = InsuranceContract.get_extraction_schema()
         instructions = InsuranceContract.get_extraction_instructions()
         
-        return f"""
+        # Use provided prompt generation function if available
+        if self.prompt_generation_func:
+            return self.prompt_generation_func(schema, instructions)
+        
+        # Use configured prompts if available
+        if self.config.map_prompt and self.config.reduce_prompt:
+            return {
+                "map_prompt": self.config.map_prompt,
+                "reduce_prompt": self.config.reduce_prompt
+            }
+        
+        # Fallback to default prompts (backward compatibility)
+        return self._get_default_prompts(schema, instructions)
+    
+    def _get_default_prompts(self, schema: Dict[str, Any], instructions: str) -> Dict[str, str]:
+        """Get default map and reduce prompts"""
+        map_prompt = f"""
 You are an expert insurance contract analyzer. Extract structured information from the provided document text chunk.
 
 {instructions}
@@ -361,6 +491,7 @@ IMPORTANT:
 - Use null for missing information
 - Return valid JSON only
 - Be precise and concise
+- Focus on identifying individual contract elements in this chunk
 
 Target JSON Schema:
 {json.dumps(schema, indent=2)}
@@ -382,6 +513,46 @@ Extract the following structure from the text chunk:
     "exclusions": []
 }}
 """
+        
+        reduce_prompt = f"""
+You are an expert insurance contract analyst. Your task is to combine and consolidate contract extractions from multiple document chunks into a single comprehensive contract structure.
+
+{instructions}
+
+IMPORTANT:
+- Merge information from all provided chunk extractions
+- Remove duplicates based on semantic similarity, not just exact matches
+- Prioritize the most complete and detailed information when combining
+- Ensure consistency across all merged data
+- Return valid JSON only
+
+Target JSON Schema:
+{json.dumps(schema, indent=2)}
+
+Rules for combining:
+1. Unique Market Reference: Take first non-null value for each field
+2. Lists (limits, premiums, coverages, exclusions): Combine all items and deduplicate
+3. When deduplicating, consider semantic similarity (e.g., "General Liability" = "GL Coverage")
+4. Preserve all unique valuable information
+5. Maintain data structure integrity
+
+Combine the following chunk extractions:
+{{chunk_extractions}}
+
+Return the consolidated contract structure:
+{{
+    "unique_market_reference": {{}},
+    "limits": [],
+    "premiums": [],
+    "coverages": [],
+    "exclusions": []
+}}
+"""
+        
+        return {
+            "map_prompt": map_prompt.strip(),
+            "reduce_prompt": reduce_prompt.strip()
+        }
     
     def _deduplicate_extractions(self, combined_data: Dict[str, Any]) -> Dict[str, Any]:
         """Remove duplicate entries from combined extractions"""
@@ -469,10 +640,7 @@ Extract the following structure from the text chunk:
             }
 
 
-def create_contract_extractor(openai_config, extraction_config: Optional[ContractExtractionConfig] = None) -> ContractExtractor:
+def create_contract_extractor(openai_config, extraction_config, prompt_generation_func=None) -> ContractExtractor:
     """Factory function to create ContractExtractor instance"""
-    if extraction_config is None:
-        extraction_config = ContractExtractionConfig()
-    
     logger.info("Creating contract extractor with LangGraph")
-    return ContractExtractor(openai_config, extraction_config)
+    return ContractExtractor(openai_config, extraction_config, prompt_generation_func)
