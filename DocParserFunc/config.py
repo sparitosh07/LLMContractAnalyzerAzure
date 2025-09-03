@@ -197,6 +197,62 @@ class ContractExtractionConfig:
 
 
 @dataclass
+class ADLSConfig:
+    """Azure Data Lake Storage configuration."""
+    account_name: str
+    account_key: str
+    container_name: str = "contract-processing"
+    base_path: str = "processed-documents"
+    
+    @classmethod
+    def from_env(cls) -> "ADLSConfig":
+        """Create config from environment variables."""
+        account_name = os.getenv("ADLS_ACCOUNT_NAME")
+        account_key = os.getenv("ADLS_ACCOUNT_KEY")
+        
+        if not account_name:
+            raise ValueError("ADLS_ACCOUNT_NAME environment variable is required")
+        if not account_key:
+            raise ValueError("ADLS_ACCOUNT_KEY environment variable is required")
+            
+        return cls(
+            account_name=account_name,
+            account_key=account_key,
+            container_name=os.getenv("ADLS_CONTAINER_NAME", "contract-processing"),
+            base_path=os.getenv("ADLS_BASE_PATH", "processed-documents")
+        )
+
+
+@dataclass
+class CosmosDBConfig:
+    """Azure Cosmos DB configuration."""
+    endpoint: str
+    key: str
+    database_name: str = "ContractProcessing"
+    container_name: str = "ProcessedDocuments"
+    partition_key: str = "/document_id"
+    
+    @classmethod
+    def from_env(cls) -> "CosmosDBConfig":
+        """Create config from environment variables."""
+        endpoint = os.getenv("COSMOS_DB_ENDPOINT")
+        key = os.getenv("COSMOS_DB_KEY")
+        
+        if not endpoint:
+            raise ValueError("COSMOS_DB_ENDPOINT environment variable is required")
+        if not key:
+            raise ValueError("COSMOS_DB_KEY environment variable is required")
+            
+        return cls(
+            endpoint=endpoint,
+            key=key,
+            database_name=os.getenv("COSMOS_DB_DATABASE", "ContractProcessing"),
+            container_name=os.getenv("COSMOS_DB_CONTAINER", "ProcessedDocuments"),
+            partition_key=os.getenv("COSMOS_DB_PARTITION_KEY", "/document_id")
+        )
+
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
     openai: OpenAIConfig
@@ -205,12 +261,28 @@ class AppConfig:
     processing: ProcessingConfig
     local_storage: LocalStorageConfig
     contract_extraction: ContractExtractionConfig
+    adls: Optional[ADLSConfig] = None
+    cosmos_db: Optional[CosmosDBConfig] = None
     debug: bool = False
     
     @classmethod
     def from_env(cls) -> "AppConfig":
         """Create complete config from environment variables."""
         try:
+            # Optional configs - only load if environment variables are present
+            adls_config = None
+            cosmos_config = None
+            
+            try:
+                adls_config = ADLSConfig.from_env()
+            except ValueError:
+                logger.info("ADLS configuration not provided, ADLS storage disabled")
+            
+            try:
+                cosmos_config = CosmosDBConfig.from_env()
+            except ValueError:
+                logger.info("Cosmos DB configuration not provided, Cosmos DB disabled")
+            
             return cls(
                 openai=OpenAIConfig.from_env(),
                 document_intelligence=DocumentIntelligenceConfig.from_env(),
@@ -218,6 +290,8 @@ class AppConfig:
                 processing=ProcessingConfig.from_env(),
                 local_storage=LocalStorageConfig.from_env(),
                 contract_extraction=ContractExtractionConfig.from_env(),
+                adls=adls_config,
+                cosmos_db=cosmos_config,
                 debug=os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
             )
         except ValueError as e:
@@ -316,6 +390,19 @@ ENV_VARS_HELP = {
     "CONTRACT_EXTRACTION_MAX_RETRIES": "Max retries for extraction (default: 3)",
     "CONTRACT_EXTRACTION_MAP_PROMPT": "Custom map prompt for contract extraction",
     "CONTRACT_EXTRACTION_REDUCE_PROMPT": "Custom reduce prompt for contract extraction",
+    
+    # Optional - ADLS
+    "ADLS_ACCOUNT_NAME": "Azure Data Lake Storage account name",
+    "ADLS_ACCOUNT_KEY": "Azure Data Lake Storage account key",
+    "ADLS_CONTAINER_NAME": "ADLS container name (default: contract-processing)",
+    "ADLS_BASE_PATH": "ADLS base path for files (default: processed-documents)",
+    
+    # Optional - Cosmos DB
+    "COSMOS_DB_ENDPOINT": "Azure Cosmos DB endpoint URL",
+    "COSMOS_DB_KEY": "Azure Cosmos DB access key",
+    "COSMOS_DB_DATABASE": "Cosmos DB database name (default: ContractProcessing)",
+    "COSMOS_DB_CONTAINER": "Cosmos DB container name (default: ProcessedDocuments)",
+    "COSMOS_DB_PARTITION_KEY": "Cosmos DB partition key (default: /document_id)",
     
     # Optional - General
     "DEBUG": "Enable debug logging (default: false)"

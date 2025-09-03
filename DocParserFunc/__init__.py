@@ -4,6 +4,7 @@ import uuid
 import asyncio
 import aiohttp
 import time
+import os
 from typing import Dict, Any, Optional
 
 import azure.functions as func
@@ -55,6 +56,37 @@ async def call_contract_extraction_async(
                     
     except Exception as e:
         logger.error(f"Failed to call contract extraction function: {str(e)}")
+        return None
+
+
+async def call_cosmos_writer_async(
+    document_id: str,
+    filename: str,
+    results: Dict[str, Any]
+) -> Optional[Dict[str, Any]]:
+    """Call CosmosWriterFunc asynchronously"""
+    try:
+        function_url = "http://localhost:7071/api/CosmosWriterFunc"
+        
+        payload = {
+            "document_id": document_id,
+            "filename": filename,
+            "results": results
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(function_url, json=payload, timeout=120) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    logger.info("Cosmos DB write completed successfully")
+                    return result
+                else:
+                    error_text = await response.text()
+                    logger.error(f"Cosmos DB write failed with status {response.status}: {error_text}")
+                    return None
+                    
+    except Exception as e:
+        logger.error(f"Failed to call CosmosWriterFunc: {str(e)}")
         return None
 
 
@@ -309,6 +341,61 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             else:
                 # Only ChunkEmbedFunc needs to succeed
                 status_code = 200 if (not isinstance(chunk_embed_result, Exception) and "error" not in chunk_embed_result) else 500
+            
+            # Write to ADLS and local storage
+            logger.info("=== Writing Results to Storage ===")
+            try:
+                import sys
+                sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'CosmosWriterFunc'))
+                from adls_integration import write_results_to_adls_and_local
+                
+                storage_info = write_results_to_adls_and_local(
+                    config, 
+                    document_id, 
+                    filename, 
+                    response
+                )
+                
+                # Add storage info to response
+                if storage_info["local_storage"]["enabled"]:
+                    response["local_storage"] = storage_info["local_storage"]
+                if storage_info["adls_storage"]["enabled"]:
+                    response["adls_storage"] = storage_info["adls_storage"]
+                    
+                logger.info("Storage operations completed")
+                
+            except Exception as e:
+                logger.warning(f"Storage operations failed: {str(e)}")
+            
+            # Write to Cosmos DB (if successful processing)
+            if status_code == 200:
+                try:
+                    logger.info("=== Writing to Cosmos DB ===\"")
+                    cosmos_result = asyncio.run(call_cosmos_writer_async(
+                        document_id=document_id,
+                        filename=filename,
+                        results=response
+                    ))
+                    
+                    if cosmos_result:
+                        response["cosmos_db_write"] = {
+                            "success": True,
+                            "message": "Document successfully written to Cosmos DB"
+                        }
+                        logger.info("Cosmos DB write completed successfully")
+                    else:
+                        response["cosmos_db_write"] = {
+                            "success": False,
+                            "message": "Failed to write to Cosmos DB"
+                        }
+                        logger.warning("Cosmos DB write failed")
+                        
+                except Exception as e:
+                    logger.warning(f"Cosmos DB write failed: {str(e)}")
+                    response["cosmos_db_write"] = {
+                        "success": False,
+                        "error": str(e)
+                    }
             
             logger.info(f"=== Request completed successfully ===")
             logger.info(f"Status: {status_code}")
