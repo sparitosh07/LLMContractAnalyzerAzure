@@ -71,6 +71,8 @@ def upload_to_search_index(chunks: List[Dict], embeddings: List[Dict], search_cl
                 "content": chunk["content"],
                 "embedding": embedding["embedding"],
                 "chunk_index": chunk["chunk_index"],
+                "page_number": chunk.get("page_number", 1),  # NEW
+                "section": chunk.get("section", ""),          # NEW
                 "metadata": json.dumps(chunk["metadata"]),
                 "tokens": chunk.get("token_count", 0),
                 "file_extension": chunk["file_extension"],
@@ -134,6 +136,8 @@ def create_search_index_if_not_exists(config) -> bool:
                 vector_search_profile_name="default-profile"
             ),
             SimpleField(name="chunk_index", type=SearchFieldDataType.Int32, filterable=True),
+            SimpleField(name="page_number", type=SearchFieldDataType.Int32, filterable=True),  # NEW
+            SearchableField(name="section", type=SearchFieldDataType.String, filterable=True),  # NEW
             SimpleField(name="metadata", type=SearchFieldDataType.String),
             SimpleField(name="tokens", type=SearchFieldDataType.Int32, filterable=True),
             SimpleField(name="file_extension", type=SearchFieldDataType.String, filterable=True),
@@ -221,6 +225,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             text_content = req_body.get("text_content")
             filename = req_body.get("filename", "document.txt")
             document_id = req_body.get("document_id") or str(uuid.uuid4())
+            page_info = req_body.get("page_info")  # Page information from PDF processing
             
             if not text_content:
                 return func.HttpResponse(
@@ -276,7 +281,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logger.info(f"Document processor initialized with chunk_size={config.processing.chunk_size}, chunk_overlap={config.processing.chunk_overlap}")
             
             # Process document
-            chunked_document = processor.process_document(text_content, filename, "text/plain", activity_logger)
+            chunked_document = processor.process_document(text_content, filename, "text/plain", activity_logger, page_info)
             logger.info(f"Document chunking completed - Generated {len(chunked_document.chunks)} chunks")
             
             if not chunked_document.chunks:
@@ -302,13 +307,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     "id": str(uuid.uuid4()),
                     "content": chunk.page_content,
                     "chunk_index": i,
+                    "page_number": chunk.metadata.get("page_number", 1),      # NEW
+                    "section": chunk.metadata.get("section", ""),            # NEW
                     "metadata": chunk.metadata,
                     "file_extension": Path(filename).suffix.lower(),
                     "title": chunk.metadata.get("source", {}).get("title", filename),
                     "token_count": len(chunk.page_content.split())
                 }
                 chunks_for_embedding.append(chunk_data)
-                logger.debug(f"Prepared chunk {i+1}/{len(chunked_document.chunks)} for embedding (ID: {chunk_data['id']})")
+                logger.debug(f"Prepared chunk {i+1}/{len(chunked_document.chunks)} for embedding (ID: {chunk_data['id']}, Page: {chunk_data['page_number']}, Section: {chunk_data['section']})")
             
             logger.info(f"Prepared {len(chunks_for_embedding)} chunks for embedding generation")
             

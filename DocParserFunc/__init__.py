@@ -190,6 +190,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 activity_logger.set_activity_info("pdf_pages", pdf_analysis_result.metadata['total_pages'])
                 activity_logger.set_activity_info("pdf_processing_time", pdf_analysis_result.processing_stats['processing_time_seconds'])
                 
+                # Prepare page information for chunking
+                page_info = {
+                    "pages": [
+                        {
+                            "page_number": page.page_number,
+                            "content": page.content,
+                            "char_start": sum(len(p.content) for p in pdf_analysis_result.pages[:page.page_number-1]),
+                            "char_end": sum(len(p.content) for p in pdf_analysis_result.pages[:page.page_number])
+                        }
+                        for page in pdf_analysis_result.pages
+                    ],
+                    "total_pages": len(pdf_analysis_result.pages)
+                }
+                
             else:
                 logger.info("=== Processing text document ===")
                 text_content = req_body.get('text', '').strip()
@@ -201,6 +215,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         mimetype="application/json"
                     )
                 logger.info(f"Text content loaded - {len(text_content)} characters")
+                # No page info for text documents
+                page_info = None
             
             activity_logger.set_activity_info("text_length", len(text_content))
             
@@ -223,7 +239,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         call_chunk_embed_func_async(
                             text_content=text_content,
                             filename=filename,
-                            document_id=document_id
+                            document_id=document_id,
+                            page_info=page_info
                         )
                     )
                     
@@ -267,7 +284,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 chunk_embed_result = asyncio.run(call_chunk_embed_func_async(
                     text_content=text_content,
                     filename=filename,
-                    document_id=document_id
+                    document_id=document_id,
+                    page_info=page_info
                 ))
                 contract_extraction_result = None
                 
@@ -427,14 +445,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
 
 
-async def call_chunk_embed_func_async(text_content: str, filename: str, document_id: str) -> Dict[str, Any]:
+async def call_chunk_embed_func_async(
+    text_content: str, 
+    filename: str, 
+    document_id: str, 
+    page_info: Dict[str, Any] = None
+) -> Dict[str, Any]:
     """Call ChunkEmbedFunc asynchronously"""
     try:
         async with aiohttp.ClientSession() as session:
             payload = {
                 "text_content": text_content,
                 "filename": filename,
-                "document_id": document_id
+                "document_id": document_id,
+                "page_info": page_info  # Pass page information if available
             }
             
             async with session.post(

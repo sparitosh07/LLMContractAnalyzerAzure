@@ -298,7 +298,8 @@ class DocumentProcessor:
         content: str, 
         filename: str, 
         content_type: Optional[str] = None,
-        activity_logger=None
+        activity_logger=None,
+        page_info: Optional[Dict[str, Any]] = None
     ) -> ChunkedDocument:
         """Full processing pipeline: crack and chunk (matches AzureML RAG workflow)."""
         # Step 1: Crack document (extract and structure content)
@@ -307,7 +308,107 @@ class DocumentProcessor:
         # Step 2: Chunk document using LangChain text splitters
         chunked_doc = self.chunk_document(chunked_doc, activity_logger)
         
+        # Step 3: Add page and section information if available
+        if page_info:
+            chunked_doc = self.add_page_and_section_metadata(chunked_doc, page_info, activity_logger)
+        
         return chunked_doc
+    
+    def add_page_and_section_metadata(
+        self, 
+        chunked_document: ChunkedDocument, 
+        page_info: Dict[str, Any], 
+        activity_logger=None
+    ) -> ChunkedDocument:
+        """Add page number and section information to chunks."""
+        if activity_logger:
+            activity_logger.info(f"Adding page/section metadata to {len(chunked_document.chunks)} chunks")
+        
+        full_text = chunked_document.page_content
+        pages = page_info.get("pages", [])
+        
+        # Calculate cumulative character positions for each chunk
+        current_pos = 0
+        for i, chunk in enumerate(chunked_document.chunks):
+            chunk_start = current_pos
+            chunk_end = current_pos + len(chunk.page_content)
+            
+            # Find which page this chunk primarily belongs to
+            page_number = self._find_chunk_page(chunk_start, chunk_end, pages)
+            section = self._detect_section(chunk.page_content, page_number)
+            
+            # Add metadata
+            chunk.metadata["page_number"] = page_number
+            chunk.metadata["section"] = section
+            chunk.metadata["chunk_start_pos"] = chunk_start
+            chunk.metadata["chunk_end_pos"] = chunk_end
+            
+            current_pos = chunk_end
+            
+            if activity_logger:
+                activity_logger.debug(f"Chunk {i}: page {page_number}, section '{section}'")
+        
+        if activity_logger:
+            activity_logger.info(f"Successfully added page/section metadata to all chunks")
+        
+        return chunked_document
+    
+    def _find_chunk_page(self, chunk_start: int, chunk_end: int, pages: List[Dict]) -> int:
+        """Find which page a chunk primarily belongs to based on character positions."""
+        if not pages:
+            return 1
+        
+        # Find the page that contains the majority of the chunk
+        best_page = 1
+        max_overlap = 0
+        
+        for page in pages:
+            page_start = page.get("char_start", 0)
+            page_end = page.get("char_end", 0)
+            
+            # Calculate overlap between chunk and page
+            overlap_start = max(chunk_start, page_start)
+            overlap_end = min(chunk_end, page_end)
+            overlap = max(0, overlap_end - overlap_start)
+            
+            if overlap > max_overlap:
+                max_overlap = overlap
+                best_page = page.get("page_number", 1)
+        
+        return best_page
+    
+    def _detect_section(self, chunk_content: str, page_number: int) -> str:
+        """Detect section information from chunk content."""
+        # Look for common section patterns
+        import re
+        
+        # Look for numbered sections (1., 2., etc.)
+        numbered_section = re.search(r'^(\d+)\.\s+(.+)', chunk_content.strip(), re.MULTILINE)
+        if numbered_section:
+            return f"Section {numbered_section.group(1)}"
+        
+        # Look for lettered sections (A., B., etc.)
+        lettered_section = re.search(r'^([A-Z])\.\s+(.+)', chunk_content.strip(), re.MULTILINE)
+        if lettered_section:
+            return f"Section {lettered_section.group(1)}"
+        
+        # Look for markdown-style headers
+        header = re.search(r'^#+\s+(.+)', chunk_content.strip(), re.MULTILINE)
+        if header:
+            return header.group(1).strip()
+        
+        # Look for all caps titles/headers
+        caps_header = re.search(r'^([A-Z][A-Z\s]{5,})$', chunk_content.strip(), re.MULTILINE)
+        if caps_header:
+            return caps_header.group(1).strip()
+        
+        # Look for lines ending with colon (likely section headers)
+        colon_header = re.search(r'^(.{5,50}):$', chunk_content.strip(), re.MULTILINE)
+        if colon_header:
+            return colon_header.group(1).strip()
+        
+        # Default to page-based section
+        return f"Page {page_number}"
     
     def get_processing_stats(self, chunked_document: ChunkedDocument) -> Dict[str, Any]:
         """Get processing statistics."""
