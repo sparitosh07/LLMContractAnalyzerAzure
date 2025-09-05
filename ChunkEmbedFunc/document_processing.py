@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Iterator
 from abc import ABC, abstractmethod
 
-from .langchain_splitter import Document, split_documents_with_langchain
-from .utils.tokens import adjust_chunk_size_for_prefix, estimate_tokens
+from langchain_text_splitters import Document, split_documents_with_langchain
+from utils.tokens import adjust_chunk_size_for_prefix, estimate_tokens
 
 
 @dataclass
@@ -200,6 +200,65 @@ class PythonFileLoader(TextFileLoader):
         return [".py"]
 
 
+class DocumentIntelligencePDFLoader(BaseDocumentLoader):
+    """Load PDF using existing Document Intelligence results with page metadata."""
+    
+    def __init__(self, content: str, document_source: DocumentSource, metadata: Dict[str, Any], doc_intel_data: dict):
+        """Initialize with Document Intelligence results."""
+        super().__init__(content, document_source, metadata)
+        self.doc_intel_data = doc_intel_data
+    
+    def load(self) -> List[Document]:
+        """Load using Document Intelligence page data."""
+        if not self.doc_intel_data:
+            raise ValueError("Document Intelligence results (doc_intel_data) are required for PDF processing")
+        
+        documents = []
+        full_content = self.doc_intel_data.get('content', '')
+        pages_data = self.doc_intel_data.get('pages', [])
+        
+        if not pages_data:
+            raise ValueError("No pages found in Document Intelligence results")
+        
+        for page_info in pages_data:
+            # Extract text for this specific page using spans
+            if 'spans' not in page_info or not page_info['spans']:
+                continue
+                
+            page_span = page_info['spans'][0]  # Usually one span per page
+            start_offset = page_span['offset']
+            length = page_span['length']
+            page_text = full_content[start_offset:start_offset + length]
+            
+            # Create metadata with page number
+            page_metadata = {**self.metadata}
+            if "source" not in page_metadata:
+                page_metadata["source"] = {}
+            
+            page_metadata["source"] = {
+                **page_metadata["source"],
+                "page_number": page_info['page_number'],
+                "title": Path(self.document_source.filename).name
+            }
+            
+            # Create chunk prefix for better context
+            chunk_prefix = f"Title: {Path(self.document_source.filename).name} (Page {page_info['page_number']})\n\n"
+            page_metadata["chunk_prefix"] = chunk_prefix
+            
+            documents.append(Document(
+                page_content=page_text.strip(),
+                metadata=page_metadata,
+                document_id=f"{self.document_source.filename}#page{page_info['page_number']}"
+            ))
+        
+        return documents
+    
+    @classmethod
+    def supported_extensions(cls) -> List[str]:
+        """Return supported file extensions."""
+        return [".pdf"]
+
+
 class DocumentProcessor:
     """Process documents through crack and chunk pipeline."""
     
@@ -221,13 +280,15 @@ class DocumentProcessor:
             ".txt": TextFileLoader,
             ".md": MarkdownFileLoader,
             ".py": PythonFileLoader,
+            ".pdf": DocumentIntelligencePDFLoader,
         }
     
     def crack_document(
         self, 
         content: str, 
         filename: str, 
-        content_type: Optional[str] = None
+        content_type: Optional[str] = None,
+        doc_intel_data: Optional[dict] = None
     ) -> ChunkedDocument:
         """Crack document content into structured format."""
         # Create document source
@@ -243,8 +304,14 @@ class DocumentProcessor:
         file_extension = Path(filename).suffix.lower()
         loader_class = self.loaders.get(file_extension, TextFileLoader)
         
-        # Load document
-        loader = loader_class(content, source, {})
+        # Load document - pass doc_intel_data for PDF files
+        if file_extension == ".pdf" and loader_class == DocumentIntelligencePDFLoader:
+            if doc_intel_data is None:
+                raise ValueError("doc_intel_data is required for PDF processing")
+            loader = loader_class(content, source, {}, doc_intel_data)
+        else:
+            loader = loader_class(content, source, {})
+            
         return loader.load_chunked_document()
     
     def chunk_document(self, chunked_document: ChunkedDocument, activity_logger=None) -> ChunkedDocument:
@@ -299,116 +366,16 @@ class DocumentProcessor:
         filename: str, 
         content_type: Optional[str] = None,
         activity_logger=None,
-        page_info: Optional[Dict[str, Any]] = None
+        doc_intel_data: Optional[dict] = None
     ) -> ChunkedDocument:
         """Full processing pipeline: crack and chunk (matches AzureML RAG workflow)."""
         # Step 1: Crack document (extract and structure content)
-        chunked_doc = self.crack_document(content, filename, content_type)
+        chunked_doc = self.crack_document(content, filename, content_type, doc_intel_data)
         
         # Step 2: Chunk document using LangChain text splitters
         chunked_doc = self.chunk_document(chunked_doc, activity_logger)
         
-        # Step 3: Add page and section information if available
-        if page_info:
-            chunked_doc = self.add_page_and_section_metadata(chunked_doc, page_info, activity_logger)
-        
         return chunked_doc
-    
-    def add_page_and_section_metadata(
-        self, 
-        chunked_document: ChunkedDocument, 
-        page_info: Dict[str, Any], 
-        activity_logger=None
-    ) -> ChunkedDocument:
-        """Add page number and section information to chunks."""
-        if activity_logger:
-            activity_logger.info(f"Adding page/section metadata to {len(chunked_document.chunks)} chunks")
-        
-        full_text = chunked_document.page_content
-        pages = page_info.get("pages", [])
-        
-        # Calculate cumulative character positions for each chunk
-        current_pos = 0
-        for i, chunk in enumerate(chunked_document.chunks):
-            chunk_start = current_pos
-            chunk_end = current_pos + len(chunk.page_content)
-            
-            # Find which page this chunk primarily belongs to
-            page_number = self._find_chunk_page(chunk_start, chunk_end, pages)
-            section = self._detect_section(chunk.page_content, page_number)
-            
-            # Add metadata
-            chunk.metadata["page_number"] = page_number
-            chunk.metadata["section"] = section
-            chunk.metadata["chunk_start_pos"] = chunk_start
-            chunk.metadata["chunk_end_pos"] = chunk_end
-            
-            current_pos = chunk_end
-            
-            if activity_logger:
-                activity_logger.debug(f"Chunk {i}: page {page_number}, section '{section}'")
-        
-        if activity_logger:
-            activity_logger.info(f"Successfully added page/section metadata to all chunks")
-        
-        return chunked_document
-    
-    def _find_chunk_page(self, chunk_start: int, chunk_end: int, pages: List[Dict]) -> int:
-        """Find which page a chunk primarily belongs to based on character positions."""
-        if not pages:
-            return 1
-        
-        # Find the page that contains the majority of the chunk
-        best_page = 1
-        max_overlap = 0
-        
-        for page in pages:
-            page_start = page.get("char_start", 0)
-            page_end = page.get("char_end", 0)
-            
-            # Calculate overlap between chunk and page
-            overlap_start = max(chunk_start, page_start)
-            overlap_end = min(chunk_end, page_end)
-            overlap = max(0, overlap_end - overlap_start)
-            
-            if overlap > max_overlap:
-                max_overlap = overlap
-                best_page = page.get("page_number", 1)
-        
-        return best_page
-    
-    def _detect_section(self, chunk_content: str, page_number: int) -> str:
-        """Detect section information from chunk content."""
-        # Look for common section patterns
-        import re
-        
-        # Look for numbered sections (1., 2., etc.)
-        numbered_section = re.search(r'^(\d+)\.\s+(.+)', chunk_content.strip(), re.MULTILINE)
-        if numbered_section:
-            return f"Section {numbered_section.group(1)}"
-        
-        # Look for lettered sections (A., B., etc.)
-        lettered_section = re.search(r'^([A-Z])\.\s+(.+)', chunk_content.strip(), re.MULTILINE)
-        if lettered_section:
-            return f"Section {lettered_section.group(1)}"
-        
-        # Look for markdown-style headers
-        header = re.search(r'^#+\s+(.+)', chunk_content.strip(), re.MULTILINE)
-        if header:
-            return header.group(1).strip()
-        
-        # Look for all caps titles/headers
-        caps_header = re.search(r'^([A-Z][A-Z\s]{5,})$', chunk_content.strip(), re.MULTILINE)
-        if caps_header:
-            return caps_header.group(1).strip()
-        
-        # Look for lines ending with colon (likely section headers)
-        colon_header = re.search(r'^(.{5,50}):$', chunk_content.strip(), re.MULTILINE)
-        if colon_header:
-            return colon_header.group(1).strip()
-        
-        # Default to page-based section
-        return f"Page {page_number}"
     
     def get_processing_stats(self, chunked_document: ChunkedDocument) -> Dict[str, Any]:
         """Get processing statistics."""

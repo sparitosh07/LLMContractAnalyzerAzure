@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 import azure.functions as func
 
 from .config import get_app_config, AppConfig, get_contract_extraction_prompts
-from .pdf_processor import create_pdf_processor
+from .pdf_processor import create_pdf_processor, DocumentPage, DocumentAnalysisResult
 from .utils.logging_utils import track_activity, LoggingConfig, exception_handler
 
 
@@ -191,17 +191,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 activity_logger.set_activity_info("pdf_processing_time", pdf_analysis_result.processing_stats['processing_time_seconds'])
                 
                 # Prepare page information for chunking
-                page_info = {
-                    "pages": [
+                doc_intel_data = {
+                    'content': analyze_result.content,
+                    'pages': [
                         {
-                            "page_number": page.page_number,
-                            "content": page.content,
-                            "char_start": sum(len(p.content) for p in pdf_analysis_result.pages[:page.page_number-1]),
-                            "char_end": sum(len(p.content) for p in pdf_analysis_result.pages[:page.page_number])
+                            'page_number': i + 1,
+                            'spans': [{'offset': page.spans[0].offset, 'length':
+                page.spans[0].length}]
                         }
-                        for page in pdf_analysis_result.pages
-                    ],
-                    "total_pages": len(pdf_analysis_result.pages)
+                        for i, page in enumerate(analyze_result.pages)
+                    ]
                 }
                 
             else:
