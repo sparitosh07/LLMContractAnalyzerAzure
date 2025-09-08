@@ -1,0 +1,25 @@
+{
+  "scriptFile": "../status.py",
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get"
+      ],
+      "route": "DocParserStatus/{instanceId}"
+    },
+    {
+      "type": "http",
+      "direction": "out", 
+      "name": "$return"
+    },
+    {
+      "name": "client",
+      "type": "orchestrationClient",
+      "direction": "in"
+    }
+  ]
+}

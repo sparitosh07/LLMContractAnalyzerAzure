@@ -241,9 +241,7 @@ class DocumentIntelligencePDFLoader(BaseDocumentLoader):
                 "title": Path(self.document_source.filename).name
             }
             
-            # Create chunk prefix for better context
-            chunk_prefix = f"Title: {Path(self.document_source.filename).name} (Page {page_info['page_number']})\n\n"
-            page_metadata["chunk_prefix"] = chunk_prefix
+            # Don't add page info to chunk content - keep it only in metadata
             
             documents.append(Document(
                 page_content=page_text.strip(),
@@ -344,13 +342,23 @@ class DocumentProcessor:
             activity_logger=activity_logger
         )
         
-        # Update metadata for all chunks
+        # Update metadata for all chunks - preserve individual chunk page metadata
         for i, chunk in enumerate(all_chunks):
+            # Preserve existing page-specific metadata before merging
+            original_source = chunk.metadata.get("source", {})
+            
+            # Merge with document metadata 
             chunk.metadata = {**chunk.metadata, **document_metadata}
+            
+            # Restore page-specific source metadata (page_number, etc.)
+            if original_source:
+                chunk.metadata["source"] = {**chunk.metadata.get("source", {}), **original_source}
+            
+            # Clean up chunk_prefix
             if "chunk_prefix" in chunk.metadata:
                 del chunk.metadata["chunk_prefix"]
             
-            # Set document ID  
+            # Set document ID with chunk index
             chunk.document_id = f"{chunked_document.source.filename}#{i}"
         
         # Update chunked document

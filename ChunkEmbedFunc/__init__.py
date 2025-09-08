@@ -225,7 +225,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             text_content = req_body.get("text_content")
             filename = req_body.get("filename", "document.txt")
             document_id = req_body.get("document_id") or str(uuid.uuid4())
-            page_info = req_body.get("page_info")  # Page information from PDF processing
+            page_info = req_body.get("page_info")  # Page information from PDF processing (legacy)
+            doc_intel_data = req_body.get("doc_intel_data")  # Document Intelligence data (new approach)
             
             if not text_content:
                 return func.HttpResponse(
@@ -280,8 +281,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
             logger.info(f"Document processor initialized with chunk_size={config.processing.chunk_size}, chunk_overlap={config.processing.chunk_overlap}")
             
-            # Process document
-            chunked_document = processor.process_document(text_content, filename, "text/plain", activity_logger, page_info)
+            # Process document - use doc_intel_data if available, fallback to page_info
+            chunked_document = processor.process_document(text_content, filename, "text/plain", activity_logger, doc_intel_data or page_info)
             logger.info(f"Document chunking completed - Generated {len(chunked_document.chunks)} chunks")
             
             if not chunked_document.chunks:
